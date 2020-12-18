@@ -112,6 +112,27 @@ const searchStopsByStreetKey = function (streetKey) {
         })
 }
 
+
+const getRenderJsonFromApiJson = function (data) {
+    const result = {
+        stopName: data['stop-schedule'].stop.name,
+        crossStreet: data['stop-schedule'].stop['cross-street'].name,
+        direction: data['stop-schedule'].stop.direction
+    }
+    const returnResult = [];
+    data['stop-schedule']['route-schedules'].forEach(function (schedule) {
+        const busNumber = schedule.route.number;
+        schedule['scheduled-stops'].reduce(function (busArray, iterm) {
+            const nextBus = iterm.times.departure.scheduled
+            busArray.push({busNumber: busNumber, nextBus: nextBus})
+            return busArray
+        }, []).forEach(function (bus) {
+            returnResult.push(Object.assign(bus, result))
+        })
+    })
+    return returnResult;
+}
+
 /**
  * searchStopSchedulesByStopKey
  * @param stopKey
@@ -123,25 +144,8 @@ const searchStopSchedulesByStopKeyFromNow = function (stopKey) {
         .catch(function (err) {
             console.error(err)
             pop().open("Fail to search stop schedules by stop, please try again!")
-        }).then(function (data) {
-            const result = {
-                stopName: data['stop-schedule'].stop.name,
-                crossStreet: data['stop-schedule'].stop['cross-street'].name,
-                direction: data['stop-schedule'].stop.direction
-            }
-            const returnResult = [];
-            data['stop-schedule']['route-schedules'].forEach(function (schedule) {
-                const busNumber = schedule.route.number;
-                schedule['scheduled-stops'].reduce(function (busArray, iterm) {
-                    const nextBus = iterm.times.departure.scheduled
-                    busArray.push({busNumber: busNumber, nextBus: nextBus})
-                    return busArray
-                }, []).forEach(function (bus) {
-                    returnResult.push(Object.assign(bus, result))
-                })
-            })
-            return returnResult;
-        }).catch(() => {
+        }).then(getRenderJsonFromApiJson)
+        .catch(() => {
             pop().open(`"Search stop schedules by stop failed, please try again late."`, 1000)
         })
 }
@@ -158,6 +162,20 @@ const renderStreetList = function (streetArray) {
         }, "")
     } else {
         pop().open("Can't find any street with the key word , please change the key word!", 1000)
+    }
+}
+
+/**
+ * Sort the list
+ * @param a
+ * @param b
+ * @returns {number}
+ */
+const sortStopScheduleList = function (a, b) {
+    if (a.stopName === b.stopName) {
+        return a.nextBus.toString().localeCompare(b.nextBus.toString())
+    } else {
+        return a.stopName.toString().localeCompare(b.stopName.toString())
     }
 }
 
@@ -185,27 +203,22 @@ const renderStreetList = function (streetArray) {
  *          <td>02:23 PM</td>
  *       </tr>
  */
-const renderStopScheduleList = function (stopScheduleArray,streetName) {
+const renderStopScheduleList = function (stopScheduleArray, streetName) {
     if (stopScheduleArray.length == 0) {
         pop().open("Sorry, can't find any bus schedule information in this street", 1000)
     } else {
         pop().close()
         document.getElementById("street-name").innerHTML = streetName;
         const content = stopScheduleArray
-            .sort(function (a, b) {
-                if (a.stopName === b.stopName) {
-                    return a.nextBus.toString().localeCompare(b.nextBus.toString())
-                } else {
-                    return a.stopName.toString().localeCompare(b.stopName.toString())
-                }
-            }).reduce(function (resultStr, stopSchedule) {
+            .sort(sortStopScheduleList)
+            .reduce(function (resultStr, stopSchedule) {
                 return resultStr += `<tr>
-            <td>${stopSchedule.stopName}</td>
-            <td>${stopSchedule.crossStreet}</td>
-            <td>${stopSchedule.direction}</td>
-            <td>${stopSchedule.busNumber}</td>
-            <td>${stopSchedule.nextBus}</td>
-        </tr>`
+                    <td>${stopSchedule.stopName}</td>
+                    <td>${stopSchedule.crossStreet}</td>
+                    <td>${stopSchedule.direction}</td>
+                    <td>${stopSchedule.busNumber}</td>
+                    <td>${stopSchedule.nextBus}</td>
+                </tr>`
             }, "")
         document.querySelector('tbody').innerHTML = content
     }
@@ -235,7 +248,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                             pop().open(`"Search stop schedules by stop failed, please try again late."`, 1000)
                         })
                         .then(function (result) {
-                            renderStopScheduleList(result.flat(1),event.target.innerText)
+                            renderStopScheduleList(result.flat(1), event.target.innerText)
                         })
                 })
         }
