@@ -16,6 +16,9 @@ function cssMinify(cb) {
         .pipe(concatCss("./bundle.css"))
         .pipe(cleanCSS())
         .pipe(dest("./dist/css"))
+        .pipe(sourcemaps.init())
+        .pipe(sourcemaps.write('.'))
+        .pipe(dest("./dist/css"))
     cb()
 }
 
@@ -24,7 +27,7 @@ function javascript(cb) {
         .pipe(sourcemaps.init())
         .pipe(concat('js/bundle.js'))
         .pipe(minify())
-        .pipe(sourcemaps.write('./map'))
+        .pipe(sourcemaps.write('.'))
         .pipe(dest('./dist'));
     cb()
 }
@@ -34,7 +37,7 @@ function html(cb) {
     src('./src/*.html')
         .pipe(htmlReplace({
             'css': 'css/bundle.css',
-            'js': 'js/bundle.js'
+            'js': 'js/bundle-min.js'
         }))
         .pipe(dest('./dist'));
     cb();
