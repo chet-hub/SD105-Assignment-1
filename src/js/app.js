@@ -113,6 +113,84 @@ const searchStopsByStreetKey = function (streetKey) {
 }
 
 
+/**
+ * get Render Json From Api Json
+ * @param data
+ * eg:
+ * {
+ *     "stop-schedule": {
+ *        "stop": {
+ *             "key": 20320,
+ *             "name": "Westbound Red River College at RRC (19 via Notre Dame)",
+ *            "number": 20320,
+ *            "direction": "Westbound",
+ *            "side": "Nearside",
+ *            "street": {"key": 50000265, "name": "Red River College", "type": "Terminal"},
+ *            "cross-street": {"key": 961, "name": "Dalton Crescent", "type": "Crescent"},
+ *            "centre": {
+ *                "utm": {"zone": "14U", "x": 628340, "y": 5530991},
+ *                "geographic": {"latitude": "49.91751", "longitude": "-97.21223"}
+ *            }
+ *        }, "route-schedules": [{
+ *            "route": {
+ *                "key": 19,
+ *                "number": 19,
+ *                "name": "Route 19 Marion-Logan-Notre Dame",
+ *                "customer-type": "regular",
+ *                "coverage": "regular",
+ *                "badge-label": 19,
+ *                "badge-style": {
+ *                    "class-names": {"class-name": ["badge-label", "regular"]},
+ *                    "background-color": "#ffffff",
+ *                    "border-color": "#d9d9d9",
+ *                    "color": "#000000"
+ *                }
+ *            },
+ *            "scheduled-stops": [{
+ *                "key": "16104576-1",
+ *                "cancelled": "false",
+ *                "times": {"departure": {"scheduled": "2020-12-18T08:48:00", "estimated": "2020-12-18T08:48:00"}},
+ *                "variant": {"key": "19-1-A", "name": "Windsor Park via Autumnwood"},
+ *                "bus": {"key": 152, "bike-rack": "false", "wifi": "false"}
+ *            }, {
+ *                "key": "16104577-1",
+ *                "cancelled": "false",
+ *                "times": {"departure": {"scheduled": "2020-12-18T09:11:00", "estimated": "2020-12-18T09:11:00"}},
+ *                "variant": {"key": "19-1-A", "name": "Windsor Park via Autumnwood"},
+ *                "bus": {"key": 334, "bike-rack": "false", "wifi": "false"}
+ *            }]
+ *        }]
+ *    }, "query-time": "2020-12-18T08:40:20"
+ * }
+ * @returns string
+ * eg:
+ *  [{
+ *      "busNumber": 19,
+ *      "nextBus": "2020-12-18T08:48:00",
+ *      "stopName": "Westbound Red River College at RRC (19 via Notre Dame)",
+ *      "crossStreet": "Dalton Crescent",
+ *      "direction": "Westbound"
+ *  }, {
+ *      "busNumber": 19,
+ *      "nextBus": "2020-12-18T09:11:00",
+ *      "stopName": "Westbound Red River College at RRC (19 via Notre Dame)",
+ *      "crossStreet": "Dalton Crescent",
+ *      "direction": "Westbound"
+ *  }, {
+ *      "busNumber": 19,
+ *      "nextBus": "2020-12-18T09:48:00",
+ *      "stopName": "Westbound Red River College at RRC (19 via Notre Dame)",
+ *      "crossStreet": "Dalton Crescent",
+ *      "direction": "Westbound"
+ *  }, {
+ *      "busNumber": 19,
+ *      "nextBus": "2020-12-18T10:25:00",
+ *      "stopName": "Westbound Red River College at RRC (19 via Notre Dame)",
+ *      "crossStreet": "Dalton Crescent",
+ *      "direction": "Westbound"
+ *  }]
+ *
+ */
 const getRenderJsonFromApiJson = function (data) {
     const result = {
         stopName: data['stop-schedule'].stop.name,
@@ -155,7 +233,7 @@ const searchStopSchedulesByStopKeyFromNow = function (stopKey) {
  * @param streetArray
  */
 const renderStreetList = function (streetArray) {
-    if (streetArray.length > 0) {
+    if (streetArray != undefined && streetArray.length > 0) {
         pop().close()
         document.querySelector('.streets').innerHTML = streetArray.reduce(function (resultStr, street) {
             return resultStr += `<a href="#" data-street-key="${street.key}">${street.name}</a>`
