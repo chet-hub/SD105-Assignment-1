@@ -197,7 +197,7 @@ const getRenderJsonFromApiJson = function (data) {
         crossStreet: data['stop-schedule'].stop['cross-street'].name,
         direction: data['stop-schedule'].stop.direction
     }
-    const returnResult = [];
+    let returnResult = [];
     data['stop-schedule']['route-schedules'].forEach(function (schedule) {
         const busNumber = schedule.route.number;
         schedule['scheduled-stops'].reduce(function (busArray, iterm) {
@@ -250,10 +250,23 @@ const renderStreetList = function (streetArray) {
  * @returns {number}
  */
 const sortStopScheduleList = function (a, b) {
-    if (a.stopName === b.stopName) {
+    if (a.busNumber === b.busNumber) {
         return a.nextBus.toString().localeCompare(b.nextBus.toString())
     } else {
-        return a.stopName.toString().localeCompare(b.stopName.toString())
+        return a.busNumber.toString().localeCompare(b.busNumber.toString())
+    }
+}
+/**
+ * filter the bus information, just the keep the next 2 bus
+ * @param value
+ * @param index
+ */
+const showTheNext2Bus = function (value,index,array){
+    if(index>=2 && value.busNumber === array[index-1].busNumber
+        && value.busNumber === array[index-2].busNumber){
+        return false;
+    }else{
+        return true;
     }
 }
 
@@ -289,6 +302,7 @@ const renderStopScheduleList = function (stopScheduleArray, streetName) {
         document.getElementById("street-name").innerHTML = streetName;
         const content = stopScheduleArray
             .sort(sortStopScheduleList)
+            .filter(showTheNext2Bus)
             .reduce(function (resultStr, stopSchedule) {
                 return resultStr += `<tr>
                     <td>${stopSchedule.stopName}</td>
